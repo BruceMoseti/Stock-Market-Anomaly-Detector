@@ -1,0 +1,88 @@
+data:
+  start_date: "2015-01-01"
+  end_date: "2025-08-01"
+  tickers:
+    - AAPL
+    - MSFT
+    - NVDA
+    - GOOGL
+    - META
+    - AMZN
+    - TSLA
+    - AMD
+    - INTC
+    - AVGO
+    - JPM
+    - BAC
+    - GS
+    - MS
+    - V
+    - MA
+    - WMT
+    - COST
+    - HD
+    - NKE
+    - PG
+    - KO
+    - PEP
+    - JNJ
+    - UNH
+    - PFE
+    - MRK
+    - ABBV
+    - LLY
+    - XOM
+    - CVX
+    - COP
+    - BA
+    - CAT
+    - GE
+    - HON
+    - DIS
+    - NFLX
+    - CMCSA
+    - T
+    - VZ
+    - ORCL
+    - CRM
+    - ADBE
+    - CSCO
+    - QCOM
+    - TXN
+    - AMAT
+    - MU
+    - IBM
+    - SPY
+    - QQQ
+    - IWM
+    - DIA
+    - GLD
+  cache_path: data/raw/prices.csv
+  processed_path: data/processed/market_features.csv
+
+features:
+  volatility_window: 20
+  volume_window: 20
+
+detector:
+  window: 30
+  z_threshold: 3.0
+  top_k: 100
+  score_weights:
+    return: 0.60
+    volume: 0.25
+    volatility: 0.15
+
+benchmark:
+  synthetic_anomalies: 200
+  series_length: 2500
+  windows: [5, 10, 20, 30, 60, 90]
+  thresholds: [2.0, 2.5, 3.0, 3.5]
+  latency_days: 1
+
+reporting:
+  save_plots: true
+  save_csv: true
+  example_tickers: [AAPL, NVDA, TSLA, META, JPM]
+  figures_dir: reports/figures
+  summaries_dir: reports/summaries
