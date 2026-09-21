@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import heapq
 import time
 import tracemalloc
 from dataclasses import dataclass
@@ -10,7 +11,6 @@ import numpy as np
 import pandas as pd
 
 from src.detectors import rolling_mad_zscore, rolling_zscore
-from src.heap_filter import AnomalyEvent, top_k_anomalies
 
 
 @dataclass
@@ -134,16 +134,19 @@ def time_and_memory(fn) -> tuple[float, float]:
 
 
 def benchmark_heap_vs_sort(scores: np.ndarray, k: int) -> dict[str, float]:
-    events = [
-        AnomalyEvent(ticker="SYN", date=pd.Timestamp("2020-01-01") + pd.Timedelta(days=i), score=float(s))
-        for i, s in enumerate(scores)
-    ]
+    values = [float(s) for s in scores]
 
     def _heap():
-        return top_k_anomalies(events, k)
+        heap: list[float] = []
+        for score in values:
+            if len(heap) < k:
+                heapq.heappush(heap, score)
+            elif score > heap[0]:
+                heapq.heapreplace(heap, score)
+        return heap
 
     def _sort():
-        return sorted(events, key=lambda e: e.score, reverse=True)[:k]
+        return sorted(values, reverse=True)[:k]
 
     heap_t, heap_m = time_and_memory(_heap)
     sort_t, sort_m = time_and_memory(_sort)
@@ -153,7 +156,7 @@ def benchmark_heap_vs_sort(scores: np.ndarray, k: int) -> dict[str, float]:
         "heap_peak_mb": heap_m,
         "sort_peak_mb": sort_m,
         "k": k,
-        "n": float(len(scores)),
+        "n": float(len(values)),
     }
 
 

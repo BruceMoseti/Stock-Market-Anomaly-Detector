@@ -71,6 +71,17 @@ reports/
 
 ## Interpreting results
 
-Shorter windows react faster to regime changes and usually raise recall at the cost of more false positives. Longer windows are stabler and miss some short spikes. MAD is less distorted by fat tails than mean/std Z-scores; the summary file records the measured relative recall difference at the configured window and threshold — use that number, do not assume 30%.
+Shorter windows react faster to regime changes and usually raise recall at the cost of more false positives. Longer windows are stabler and miss some short spikes. MAD is less distorted by fat tails than mean/std Z-scores; `reports/summaries/run_summary.txt` records the measured relative recall difference — use that number, do not assume 30%.
 
-Top-K ranking uses a bounded min-heap: only K entries stay in memory, so selecting the 100 strongest scores from ~100k+ rows is `O(n log K)` rather than a full `O(n log n)` sort.
+Top-K ranking uses a bounded min-heap (`O(n log K)`, `O(K)` extra memory) instead of sorting every score (`O(n log n)`). At this panel size CPython's Timsort can still win on wall-clock time; the heap's advantage is the bounded working set.
+
+## Sample synthetic run
+
+`python main.py --synthetic` on the default 55 tickers (2015-01-01 to 2025-08-01):
+
+- 151,910 ticker-day observations
+- 126 composite Z-score anomalies at window=30, threshold=3.0
+- Injected-anomaly benchmark at the same settings: Z-score precision 1.00 / recall 0.67 / F1 0.80; MAD precision 0.90 / recall 1.00 / F1 0.95
+- Relative recall difference (MAD vs Z-score): **50.4%**
+- Top-K heap vs full sort on 150,205 scores (K=100): heap 0.003 s / ~0 MB extra vs sort 0.019 s / 1.7 MB
+- Charts under `reports/figures/` (price markers, return histogram, volatility, volume, Z/MAD paths, precision/recall vs threshold, F1 vs window, runtime, counts by ticker, algorithm comparison)
